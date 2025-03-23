@@ -30,9 +30,9 @@ router
   .delete(auth, authByUserRole("admin"), deleteProduct);
 
 // POST Routes User
-router.route("/rate/:id").put(auth, rateProduct);
+router.route("/rate/:id").put(auth, authByUserRole("user"), rateProduct);
 
 // DELETE Routes User
-router.route("/review/delete").delete(auth, deleteReview);
+router.route("/review/delete").delete(auth, authByUserRole("user"), deleteReview);
 
 export default router;

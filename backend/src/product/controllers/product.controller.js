@@ -30,8 +30,52 @@ export const addNewProduct = async (req, res, next) => {
 };
 
 export const getAllProducts = async (req, res, next) => {
-  // Implement the functionality for search, filter and pagination this function.
+  try {
+    let queryObj = {};
+    
+    // 1. Search by name
+    if (req.query.keyword) {
+      queryObj.name = { $regex: req.query.keyword, $options: "i" }; // Case-insensitive search
+    }
+
+    // 2. Filter by category
+    if (req.query.category) {
+      queryObj.category = req.query.category;
+    }
+
+    // 3. Filter by price range
+    if (req.query.minPrice || req.query.maxPrice) {
+      queryObj.price = {};
+      if (req.query.minPrice) queryObj.price.$gte = Number(req.query.minPrice);
+      if (req.query.maxPrice) queryObj.price.$lte = Number(req.query.maxPrice);
+    }
+
+    // 4. Filter by rating
+    if (req.query.minRating) {
+      queryObj.rating = { $gte: Number(req.query.minRating) };
+    }
+
+    // 5. Pagination
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const products = await ProductModel.find(queryObj).limit(limit).skip(skip);
+
+    const totalProducts = await ProductModel.countDocuments(queryObj);
+
+    res.status(200).json({
+      success: true,
+      totalProducts,
+      page,
+      totalPages: Math.ceil(totalProducts / limit),
+      products,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
 
 export const updateProduct = async (req, res, next) => {
   try {
@@ -154,6 +198,15 @@ export const deleteReview = async (req, res, next) => {
     const reviewToBeDeleted = reviews[isReviewExistIndex];
     reviews.splice(isReviewExistIndex, 1);
 
+    // **Update product rating after deletion**
+    let avgRating = 0;
+    if (reviews.length > 0) {
+      avgRating = reviews.reduce((sum, rev) => sum + rev.rating, 0) / reviews.length;
+    }
+
+    product.rating = avgRating; // Update product rating
+    product.reviews = reviews;  // Update review list
+    
     await product.save({ validateBeforeSave: false });
     res.status(200).json({
       success: true,
