@@ -21,7 +21,7 @@ export const createNewUser = async (req, res, next) => {
   const { name, email, password } = req.body;
   try {
     const existingUser = await UserModel.findOne({ email });
-    console.log(existingUser)
+
     if (existingUser) {
       return next(new ErrorHandler(400, "This email is already registered. Please use another email."));
     }

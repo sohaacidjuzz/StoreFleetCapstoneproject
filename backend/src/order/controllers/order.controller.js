@@ -1,7 +1,7 @@
 // Please don't change the pre-written code
 // Import the necessary modules here
 
-import { createNewOrderRepo } from "../model/order.repository.js";
+import { createNewOrderRepo, findOrderByIdRepo, findOrderByUserIdRepo } from "../model/order.repository.js";
 import { ErrorHandler } from "../../../utils/errorHandler.js";
 
 export const createNewOrder = async (req, res, next) => {
@@ -43,6 +43,32 @@ export const createNewOrder = async (req, res, next) => {
       order: newOrder,
     });
   } catch (error) {
-    return next(ErrorHandler(500, error))
+    return next(new ErrorHandler(500, error))
   }
 };
+
+
+export const getOrderDetails = async (req, res, next) => {
+  try {
+    const orderId = req.params.id;
+    const orderDetails = await findOrderByIdRepo(orderId);
+    if (!orderDetails) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    res.status(200).json({ success: true, orderDetails });
+
+  } catch (error) {
+    return next(new ErrorHandler(500, error));
+  }
+}
+
+export const myOrders = async (req, res, next) => {
+  // Write your code here to get all orders of a single user
+  try {
+    const userId = req.user.id;
+    const orders = await findOrderByUserIdRepo(userId);
+    res.status(200).json({ success: true, orders });
+  } catch (error) {
+    return next(new ErrorHandler(500, error));
+  }
+}

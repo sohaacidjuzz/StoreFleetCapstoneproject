@@ -18,7 +18,7 @@ const producSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: [true, "product price  is required"],
+      required: [true, "product price is required"],
       maxLength: [8, "price can be of maximum 8 digits"],
     },
     rating: {
